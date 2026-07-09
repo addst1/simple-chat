@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6C6FF2"/>
+      <stop offset="100%" stop-color="#4B4FE0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="92" height="92" rx="24" fill="url(#bg)"/>
+
+  <path d="M70 74 Q70 84 60 86 Q66 80 64 74 Z" fill="#3A3ED1"/>
+
+  <circle cx="74" cy="30" r="10" fill="#9AA0FF" opacity="0.55"/>
+
+  <text x="50" y="62"
+        text-anchor="middle"
+        font-family="Pretendard, 'Pretendard Variable', -apple-system, 'Segoe UI', sans-serif"
+        font-weight="800"
+        font-size="30"
+        letter-spacing="-1"
+        fill="#ffffff">Talks</text>
+</svg>
