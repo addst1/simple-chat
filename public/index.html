@@ -68,7 +68,7 @@
     flex-direction: column;
     gap: 8px;
   }
-  .msg { max-width: 75%; }
+  .msg { max-width: 75%; display: flex; flex-direction: column; }
   .msg .bubble {
     padding: 8px 12px;
     border-radius: 14px;
@@ -77,9 +77,22 @@
     line-height: 1.4;
     word-break: break-word;
   }
-  .msg .meta { font-size: 11px; color: #999; margin-bottom: 2px; }
-  .msg.me { align-self: flex-end; }
+  .msg .meta {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    padding: 0 2px;
+  }
+  .msg .time {
+    font-size: 10px;
+    color: #b3b3b3;
+    margin-top: 2px;
+    padding: 0 2px;
+  }
+  .msg.me { align-self: flex-end; align-items: flex-end; }
   .msg.me .bubble { background: #5b6cff; color: #fff; }
+  .msg.me .meta { color: #5b6cff; text-align: right; }
+  .msg.other { align-self: flex-start; align-items: flex-start; }
   .msg.system { align-self: center; }
   .msg.system .bubble { background: transparent; color: #999; font-size: 12px; }
   #chat-form {
@@ -141,7 +154,7 @@
     ws.addEventListener('message', (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'message') {
-        addMessage(data.name, data.text, data.name === myName);
+        addMessage(data.name, data.text, data.time, data.name === myName);
       } else if (data.type === 'system') {
         addSystemMessage(data.text);
       } else if (data.type === 'users') {
@@ -154,12 +167,30 @@
     });
   }
 
-  function addMessage(name, text, isMe) {
+  // 닉네임마다 고정된 색상을 배정 (구분 목적)
+  const nameColors = ['#5b6cff', '#e8590c', '#2f9e44', '#e64980', '#1971c2', '#9c36b5', '#f08c00'];
+  function colorForName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return nameColors[hash % nameColors.length];
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const h = d.getHours().toString().padStart(2, '0');
+    const m = d.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
+  function addMessage(name, text, time, isMe) {
     const wrap = document.createElement('div');
-    wrap.className = 'msg' + (isMe ? ' me' : '');
+    wrap.className = 'msg ' + (isMe ? 'me' : 'other');
+    const metaColor = isMe ? '' : `style="color:${colorForName(name)}"`;
     wrap.innerHTML = `
-      <div class="meta">${isMe ? '' : escapeHtml(name)}</div>
+      <div class="meta" ${metaColor}>${isMe ? '나' : escapeHtml(name)}</div>
       <div class="bubble">${escapeHtml(text)}</div>
+      <div class="time">${formatTime(time)}</div>
     `;
     messagesEl.appendChild(wrap);
     messagesEl.scrollTop = messagesEl.scrollHeight;
