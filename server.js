@@ -1,11 +1,51 @@
 const path = require('path');
 const express = require('express');
 const { WebSocketServer } = require('ws');
+const webpush = require('web-push');
 
 const PORT = process.env.PORT || 3000;
 
+// 푸시 알림용 VAPID 키 (환경변수로 지정 가능, 없으면 아래 기본값 사용)
+const VAPID_PUBLIC_KEY =
+  process.env.VAPID_PUBLIC_KEY ||
+  'BCAyLZ1TZKAhl8y9ifv29x05_7dY7jF-I6xO9H_cepCRom9W0FY912U3Trz4P0SNSTJwxqieSemBQKGcTEmUfhQ';
+const VAPID_PRIVATE_KEY =
+  process.env.VAPID_PRIVATE_KEY || 'tSLQysnoFQXHk5cO9F11zs9rLaOsDqy9rS06DJdER9A';
+
+webpush.setVapidDetails('mailto:admin@example.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
 const app = express();
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/vapid-public-key', (req, res) => {
+  res.send(VAPID_PUBLIC_KEY);
+});
+
+// 푸시 구독 정보 저장 (메시지 내용은 저장하지 않음, 알림 전송용 구독 정보만 메모리에 보관)
+const pushSubscriptions = new Map(); // name -> subscription
+
+app.post('/subscribe', (req, res) => {
+  const { name, subscription } = req.body || {};
+  if (!name || !subscription) return res.status(400).end();
+  pushSubscriptions.set(name, subscription);
+  res.status(201).end();
+});
+
+function notifyOffline(senderName) {
+  const payload = JSON.stringify({
+    title: '간단 채팅',
+    body: `${senderName}님이 메시지를 보냈습니다.`,
+  });
+  const connectedNames = new Set([...clients.values()].map((c) => c.name));
+  for (const [name, sub] of pushSubscriptions.entries()) {
+    if (name === senderName) continue;
+    if (connectedNames.has(name)) continue; // 이미 채팅방에 접속 중이면 알림 생략
+    webpush.sendNotification(sub, payload).catch(() => {
+      pushSubscriptions.delete(name); // 만료된 구독 정리
+    });
+  }
+}
 
 const server = app.listen(PORT, () => {
   console.log(`채팅 서버 실행 중: http://localhost:${PORT}`);
@@ -58,6 +98,7 @@ wss.on('connection', (ws) => {
         text,
         time: Date.now(),
       });
+      notifyOffline(client.name);
       return;
     }
   });
