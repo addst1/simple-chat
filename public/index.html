@@ -119,7 +119,7 @@
 
 <div id="join-screen">
   <h1>💬 간단 채팅</h1>
-  <input id="name-input" type="text" placeholder="닉네임을 입력하세요" maxlength="20" />
+  <input id="name-input" type="text" placeholder="닉네임을 입력하세요" maxlength="20" autofocus />
   <button id="join-btn">입장하기</button>
 </div>
 
@@ -147,6 +147,10 @@
 
   let myName = '';
   let ws;
+
+  // 페이지 열리면 바로 닉네임 입력창에 커서 + 기존 텍스트 선택
+  nameInput.focus();
+  nameInput.select();
 
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
